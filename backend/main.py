@@ -70,10 +70,9 @@ def delete_book(book_id:int, db:session=Depends(get_db)):
     db_book = db.query(models.Book).filter(models.Book.id==book_id).first()
     if not db_book:
         raise HTTPException(status_code=404,detail="Book not found.")
-    book_title = db_book.title
     db.delete(db_book)
     db.commit()
-    return{"message":f'{book_title} was deleted successfully from the system.'}
+    return db_book
 
 # Updating the book details into the system
 @app.put("/book/{book_id}",response_model=schemas.BookResponse)

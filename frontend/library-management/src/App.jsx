@@ -1,4 +1,5 @@
-import { useState,useEffect, use } from "react";
+import { useState,useEffect} from "react";
+import { getBooks,addBooks,deleteBooks,updateBooks } from "./services/bookServices";
 import axios from 'axios';
 import SearchBar from "./components/SearchBar";
 import SortButtons from "./components/SortButtons";
@@ -41,7 +42,7 @@ function App(){
     setLoading(true);
     setError(false);
     try{
-      const res = await axios.get(`${BASE_URL}/book`);
+      const res = await getBooks();
       setResponse(res.data);
     }
     catch(err){
@@ -71,7 +72,7 @@ function App(){
       return;
     }
     try{
-      const res = await axios.post(`${BASE_URL}/book`,{
+      const res = await addBooks({
         title:formData.title,
         author:formData.author,
         publication_year:Number(formData.publication_year),
@@ -111,9 +112,9 @@ function App(){
     setLoading(true);
     setError(null);
     try{
-      const res = await axios.delete(`${BASE_URL}/book/${id}`);
-      getBook();
-      alert(res.data.message);
+      const res = await deleteBooks(id);
+      await getBook();
+
     }
     catch(err){
       setError(err.response?.data?.detail||
@@ -178,7 +179,7 @@ function App(){
     setLoading(true);
     setError(null);
     try{
-      const res = await axios.put(`${BASE_URL}/book/${id}`,{
+      const res = await updateBooks(id,{
           title:editText.title,
           author:editText.author,
           publication_year:editText.publication_year,
