@@ -20,7 +20,7 @@ class Book(BaseModel):
     author:str=Field(min_length=1)
     publication_year:int=Field(ge=1000)
     genre:str=Field(min_length=1)
-    rating:int=Field(ge=0,le=5)
+    rating:float=Field(ge=0,le=5)
     language:str=Field(min_length=1)
     available: bool=False
 
