@@ -11,3 +11,10 @@ class Book(Base):
     rating = Column(Float,nullable=False)
     language = Column(String,nullable=False)
     available = Column(Boolean,default=True)
+
+class Member(Base):
+    __tablename__ = "members"
+    id = Column(Integer,primary_key=True,index=True)
+    name = Column(String,nullable=False)
+    email = Column(String,nullable=False,unique=True)
+    phone = Column(Integer,nullable=False)
