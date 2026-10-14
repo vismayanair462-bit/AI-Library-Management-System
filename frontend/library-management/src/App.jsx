@@ -82,7 +82,7 @@ function App(){
         available:formData.available
       });
       await getBook();
-      alert(res.data.message);
+      alert(`${formData.title} was added successfully to the system.`);
       setFormData({
           title:"",
           author:"",
@@ -114,6 +114,7 @@ function App(){
     try{
       const res = await deleteBooks(id);
       await getBook();
+      alert('The book was deleted from the system.');
 
     }
     catch(err){
@@ -189,7 +190,7 @@ function App(){
           available:editText.available
       });
       await getBook();
-      alert(res.data.message);
+      alert('The book details were updated to the system.');
       setUpdateID(null);
     }
     catch(err){
