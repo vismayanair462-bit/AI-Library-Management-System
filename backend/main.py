@@ -5,11 +5,16 @@ from database import engine
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel,Field
 from routers.book import router as book_router
+from routers.members import router as member_router
+from routers.authors import router as author_router
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
 app.include_router(book_router)
+app.include_router(member_router)
+app.include_router(author_router)
 
 
 app.add_middleware(

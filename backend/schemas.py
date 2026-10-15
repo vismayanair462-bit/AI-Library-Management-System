@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 class BookCreate(BaseModel):
     title:str
@@ -17,9 +18,19 @@ class BookResponse(BookCreate):
 class MemberCreate(BaseModel):
     name:str
     email:str
-    phone:int
+    phone:str
 
 class MemberResponse(MemberCreate):
     id:int
+    class Config:
+        from_attribute = True
+
+class AuthorCreate(BaseModel):
+    name:str
+    bio:str|None=None
+
+class AuthorResponse(AuthorCreate):
+    author_id:int
+    created_at: datetime
     class Config:
         from_attribute = True

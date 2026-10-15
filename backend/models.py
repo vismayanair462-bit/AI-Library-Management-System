@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean
+from sqlalchemy import Column, Integer, String, Float, Boolean, Text, DateTime
+from sqlalchemy.sql import func
 from database import Base
 
 class Book(Base):
@@ -17,4 +18,11 @@ class Member(Base):
     id = Column(Integer,primary_key=True,index=True)
     name = Column(String,nullable=False)
     email = Column(String,nullable=False,unique=True)
-    phone = Column(Integer,nullable=False)
+    phone = Column(String,nullable=False)
+
+class Author(Base):
+    __tablename__ = "authors"
+    author_id = Column(Integer,primary_key=True,index=True)
+    name = Column(String,nullable=False)
+    bio = Column(Text,nullable=True)
+    created_at = Column( DateTime(timezone=True),server_default=func.now(),nullable=False)
