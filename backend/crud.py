@@ -1,6 +1,9 @@
 from sqlalchemy.orm import session
+from datetime import datetime,timezone
+from fastapi import HTTPException
 import models
 import schemas
+
 
 # Database operation for getting all the books from the system
 def get_books(db:session):
@@ -10,7 +13,7 @@ def get_books(db:session):
 def add_book(db:session,book:schemas.BookCreate):
     new_book = models.Book(
             title=book.title,
-            author=book.author,
+            author_id=book.author_id,
             publication_year=book.publication_year,
             genre=book.genre,
             rating=book.rating,
@@ -37,7 +40,7 @@ def update_book(db:session,book:schemas.BookCreate,book_id:int):
             if not db_book:
                 return None
             db_book.title = book.title
-            db_book.author = book.author
+            db_book.author_id = book.author_id
             db_book.publication_year = book.publication_year
             db_book.genre = book.genre
             db_book.rating = book.rating
@@ -118,3 +121,137 @@ def update_author(db:session,author_id:int,author:schemas.AuthorCreate):
       db.commit()
       db.refresh(db_author)
       return db_author
+
+# Database operation to check whether book, member and avialability; update borrow records table
+def borrow_book(db:session,borrow:schemas.BorrowRecordCreate):
+      # Check if the book exists
+      db_borrow = db.query(models.Book).filter(models.Book.id == borrow.book_id).first()
+      if not db_borrow:
+            raise HTTPException(status_code=400,detail="Book has been borrowed")
+
+      # Check if the member exists
+      db_borrow_member = db.query(models.Member).filter(models.Member.id == borrow.member_id).first()
+      if not db_borrow_member:
+            raise HTTPException(status_code=404, detail="Member not found")
+
+      # Check if the book is available
+      if not db_borrow.available:
+            raise HTTPException(status_code=400,detail="Book has been borrowed")
+      
+      # Creating a record for the borrowed book
+      db_borrow_book = models.BorrowRecord(
+            book_id = borrow.book_id,
+            member_id = borrow.member_id
+      )
+
+      # Mark borrowed books as unavailable
+      db_borrow.available = False
+
+      db.add(db_borrow_book)
+      db.commit()
+      db.refresh(db_borrow_book)
+      return {"message":f"{db_borrow.title} was borrowed by {db_borrow_member.name}"}
+
+# Database operation for returning book and updating the bookRecords table
+def return_book(db:session,returns:schemas.ReturnBookCreate):
+      # Find the borrowed book
+      db_return = db.query(models.BorrowRecord).filter(models.BorrowRecord.id == returns.borrow_record_id).first()
+
+      if not db_return:
+            raise HTTPException(status_code=400,detail="Borrow record not found.")
+
+      # Checking the status of the borrowed book
+      if db_return.status == 'returned':
+            raise HTTPException(status_code=400,detail="Book already returned")
+
+      # Finding the associated book 
+      db_return_book = db.query(models.Book).filter(models.Book.id == db_return.book_id).first()
+
+      if not db_return_book:
+            raise HTTPException(status_code=404, detail="Book not found.")
+
+      # Update the status of the book to returned
+      db_return.status = "returned"
+      # Update the date-time of the return in the table
+      db_return.return_date = datetime.now(timezone.utc)
+      # Set the the book status to available
+      db_return_book.available = True
+
+      db.commit()
+      db.refresh(db_return)
+      return{"message":f"{db_return_book.title} has been returned successfully."}
+
+# Database opration to get all the available books from the books table 
+def get_available_books(db:session):
+      db_available = db.query(models.Book).filter(models.Book.available==True).all()
+      return [
+            {
+                  "title": book.title,
+                  "author_name": book.author.name
+            }
+            for book in db_available
+      ]
+
+# Database operation to get information about the borrowed books
+def get_borrowed_books(db:session):
+      db_borrowed = db.query(models.BorrowRecord).filter(models.BorrowRecord.status=="Borrowed").all()
+      return[
+            {
+                  "book_title": book.book.title,
+                  "member_name": book.member.name,
+                  "borrowed_date":book.borrow_date,
+                  "status":book.status
+            }
+            for book in db_borrowed
+      ]
+
+
+# Database operation to get borrowing history of all the patrons of the library
+def get_member_history(db:session,member_id:int):
+      db_history = db.query(models.BorrowRecord).filter(models.BorrowRecord.member_id==member_id).all()
+      return[
+            {
+            "member_name": book.member.name,
+            "book_title": book.book.title,
+            "borrow_date": book.borrow_date,
+            "return_date": book.return_date,
+            "status": book.status
+      }
+      for book in db_history
+      ]
+
+# Database operation to get borrowing history of a book in the library
+def get_book_history(db:session,book_id:int):
+      db_book_history = db.query(models.BorrowRecord).filter(models.BorrowRecord.book_id==book_id).all()
+      return[
+            {
+                  "book_name": book.book.title,
+                  "member_name": book.member.name,
+                  "borrow_date": book.borrow_date,
+                  "return_date": book.return_date,
+                  "status": book.status
+            }
+            for book in db_book_history
+      ]
+
+# Database operation to get importatnt library statistics
+def get_library_statistics(db:session):
+      # Displaying the total number of books in the system
+      total_books = db.query(models.Book).count()
+
+      # Displaying the total number of available books in the system
+      available_books = db.query(models.Book).filter(models.Book.available==True).count()
+
+      # Displaying the the total number of borrowed books in the system
+      borrowed_books = db.query(models.BorrowRecord).filter(models.BorrowRecord.status=="Borrowed").count()
+
+      # Displaying the total registered members in the library
+      total_members = db.query(models.Member).count()
+
+      return{
+                  "total_books": total_books,
+                  "available_books": available_books,
+                  "borrowed_books": borrowed_books,
+                  "total_members": total_members
+            }
+      

@@ -33,3 +33,8 @@ def update_member(member:schemas.MemberCreate,member_id:int,db:session=Depends(g
     if not db_member:
         raise HTTPException(status_code=404, detail="Member not found.")
     return db_member
+
+# Getting borrowing history of all the members of the library
+@router.get("/member/{id}",response_model=List[schemas.MembersHistory])
+def member_history(member_id:int,db:session=Depends(get_db)):
+    return crud.get_member_history(db,member_id)

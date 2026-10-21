@@ -33,3 +33,14 @@ def update_book(book:schemas.BookCreate,book_id:int,db:session=Depends(get_db)):
    if updated_book is None:
        raise HTTPException(status_code=404, detail="Book not found.")
    return updated_book
+
+# Displaying all the available books in the system
+@router.get("/available-books",response_model=List[schemas.AvailableBooksResponse])
+def available_books(db:session=Depends(get_db)):
+    available_book = crud.get_available_books(db)
+    return available_book
+
+# Displaying the borrowed history of a book in the system
+@router.get("/book-history/{id}",response_model=List[schemas.BookHistoryResponse])
+def get_book_history(book_id:int,db:session=Depends(get_db)):
+    return crud.get_book_history(db,book_id)

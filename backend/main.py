@@ -7,6 +7,8 @@ from pydantic import BaseModel,Field
 from routers.book import router as book_router
 from routers.members import router as member_router
 from routers.authors import router as author_router
+from routers.borrow import router as borrow_router
+from routers.dashboard import router as dashboard_router
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -15,7 +17,8 @@ app = FastAPI()
 app.include_router(book_router)
 app.include_router(member_router)
 app.include_router(author_router)
-
+app.include_router(borrow_router)
+app.include_router(dashboard_router)
 
 app.add_middleware(
     CORSMiddleware,
