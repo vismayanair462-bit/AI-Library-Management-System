@@ -11,7 +11,7 @@ router = APIRouter()
 
 # Getting all the books in the library
 @router.get("/book",response_model=List[schemas.BookResponse])
-def get_books(db:session=Depends(get_db)):
+def get_books(db:session=Depends(get_db),current_user: User = Depends(get_current_user)):
     return crud.get_books(db)
 
 # Adding new books into the system
@@ -37,11 +37,11 @@ def update_book(book:schemas.BookCreate,book_id:int,db:session=Depends(get_db),c
 
 # Displaying all the available books in the system
 @router.get("/available-books",response_model=List[schemas.AvailableBooksResponse])
-def available_books(db:session=Depends(get_db)):
+def available_books(db:session=Depends(get_db),current_user: User = Depends(get_current_user)):
     available_book = crud.get_available_books(db)
     return available_book
 
 # Displaying the borrowed history of a book in the system
 @router.get("/book-history/{id}",response_model=List[schemas.BookHistoryResponse])
-def get_book_history(book_id:int,db:session=Depends(get_db)):
+def get_book_history(book_id:int,db:session=Depends(get_db),current_user: User = Depends(get_current_user)):
     return crud.get_book_history(db,book_id)
