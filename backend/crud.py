@@ -1,5 +1,6 @@
 from sqlalchemy.orm import session
 from datetime import datetime,timezone
+from auth import hash_password,verify_password
 from fastapi import HTTPException
 import models
 import schemas
@@ -254,4 +255,46 @@ def get_library_statistics(db:session):
                   "borrowed_books": borrowed_books,
                   "total_members": total_members
             }
-      
+
+# Database operation to allow users to register into the library system
+def create_user(db:session,user:schemas.UserCreate):
+    # Check if the entered email already exists int the system
+    db_email = db.query(models.User).filter(models.User.email == user.email).first()
+    if db_email:
+        raise HTTPException(status=400,detail="Email is already registered.")
+
+    # Hashing the user entered password
+    hashed_password = hash_password(user.password)
+
+    # Creating an user object using SqlAlchemy
+    db_user = models.User(
+        name=user.name,
+        phone=user.phone,
+        email=user.email,
+        hashed_password=hashed_password,
+        role="member"
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+
+# Database operation for a user to login into the system using email and password
+def user_login(db:session,user:schemas.UserLogin):
+    # Check if the user exists using the email
+    db_email = db.query(models.User).filter(models.User.email == user.email).first()
+    if not db_email:
+        raise HTTPException(status=404, detail="User not found.")
+    
+    # Verify the password the user entered
+    valid_password = verify_password(user.password,db_email.hashed_password)
+    if not valid_password:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password."
+        )
+
+    return db_email
+
+# Database operation for verifyinng user credentials
+def get_user_by_id(db:session,user_id:int):
+    return db.query(models.User).filter(models.User.id == user_id).first()

@@ -9,6 +9,7 @@ from routers.members import router as member_router
 from routers.authors import router as author_router
 from routers.borrow import router as borrow_router
 from routers.dashboard import router as dashboard_router
+from routers.users import router as users_router
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -19,6 +20,7 @@ app.include_router(member_router)
 app.include_router(author_router)
 app.include_router(borrow_router)
 app.include_router(dashboard_router)
+app.include_router(users_router)
 
 app.add_middleware(
     CORSMiddleware,
